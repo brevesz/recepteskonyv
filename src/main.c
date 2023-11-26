@@ -13,7 +13,7 @@
 #define MAX_LEIRAS_HOSSZ 5000
 #define MAX_HOZZAVALO_NEV_HOSSZ 50
 #define MAX_HOZZAVALO_MENNYISEG_HOSSZ 50
-#define MAX_HOZZAVALOK 30
+#define MAX_HOZZAVALOK 50
 
 const char *RECEPTEK_MAPPA = "receptek";
 
@@ -42,9 +42,6 @@ Hozzavalo hozzavalo_new()
     return h;
 }
 
-Recept *receptek;
-int receptek_szama = 0;
-
 void hozzavalo_free(Hozzavalo hozzavalo)
 {
     if (hozzavalo.nev != NULL)
@@ -52,6 +49,18 @@ void hozzavalo_free(Hozzavalo hozzavalo)
 
     if (hozzavalo.mennyiseg != NULL)
         free(hozzavalo.mennyiseg);
+}
+
+// spacet '_'-re csereli
+void slug(char *nev)
+{
+    char *c;
+    char *kurzor = nev;
+    while ((c = strchr(kurzor, ' ')) != NULL)
+    {
+        *c = '_';
+        kurzor = c + 1;
+    }
 }
 
 void recept_free(Recept recept)
@@ -74,8 +83,14 @@ void recept_free(Recept recept)
         free(recept.leiras);
 }
 
-void recept_torles(Recept *recept)
+void recept_torles(Recept *recept, Recept *receptek, int *receptek_szama)
 {
+    // fajlnev letrehozasa
+    char fajlnev[MAX_CIM_HOSSZ];
+    strncpy(fajlnev,recept->cim,MAX_CIM_HOSSZ);
+    slug(fajlnev);
+
+    // a receptekbol torles
     int recept_index = recept - receptek;
     recept_free(receptek[recept_index]);
 
@@ -84,10 +99,21 @@ void recept_torles(Recept *recept)
         receptek[i] = receptek[i + 1];
     }
     receptek_szama--;
-    printf("Recept torolve.\n");
+
+    // fajl torlese
+    chdir(RECEPTEK_MAPPA);
+    if (remove(fajlnev) == 0)
+    {
+        printf("Recept torolve.\n");
+    }
+    else
+    {
+        printf("A recept torlese sikertelen.\n");
+    }
+    chdir("..");
 }
 
-void recept_kiir(Recept *recept)
+void recept_kiir(Recept *recept, Recept *receptek, int *receptek_szama)
 {
     printf("\n");
     printf("%s\n", recept->cim);
@@ -125,7 +151,7 @@ void recept_kiir(Recept *recept)
     }
 }
 
-void osszes_recept()
+void osszes_recept(Recept *receptek, int *receptek_szama)
 {
     printf("[0] <- Vissza\n");
     for (int i = 0; i < receptek_szama; ++i)
@@ -223,7 +249,7 @@ bool recept_beolvas_fajlbol(const char *fajlnev, Recept *recept)
     return true;
 }
 
-bool osszes_recept_betolt()
+bool osszes_recept_betolt(Recept **receptek, int *receptek_szama)
 {
     DIR *mappa;
     struct dirent *elem;
@@ -256,10 +282,10 @@ bool osszes_recept_betolt()
         bool ez_egy_fajl = (st.st_mode & S_IFMT) == S_IFREG;
         if (ez_egy_fajl)
         {
-            receptek_szama++;
-            receptek = realloc(receptek, receptek_szama * sizeof(Recept));
-            receptek[receptek_szama - 1] = recept_new();
-            if (!recept_beolvas_fajlbol(fajlnev, &receptek[receptek_szama - 1]))
+            *receptek_szama++;
+            *receptek = realloc(*receptek, *receptek_szama * sizeof(Recept));
+            (*receptek)[*receptek_szama - 1] = recept_new();
+            if (!recept_beolvas_fajlbol(fajlnev, &(*receptek)[*receptek_szama - 1]))
             {
                 // hiba beolvasas kozben
                 closedir(mappa);
@@ -272,19 +298,6 @@ bool osszes_recept_betolt()
     closedir(mappa);
     chdir("..");
     return true;
-}
-
-int pelda_recept_beolvasasara()
-{
-    Recept recept = recept_new();
-    bool siker = recept_beolvas_fajlbol("receptek\\Lencsefozelek", &recept);
-    if (!siker)
-        return 1;
-
-    recept_kiir(&recept);
-
-    recept_free(recept);
-    return 0;
 }
 
 // uj recept beolvasasa a konzolrol
@@ -302,7 +315,7 @@ Recept recept_interaktiv_beolvas()
 
     printf("Adja meg a recept cimet: \n");
     fgets(recept.cim, MAX_CIM_HOSSZ, stdin);
-    // enter nem kell a vegere
+    // fgets entert rak a vegere, ezt lecsereljuk lezaro nullara
     recept.cim[strlen(recept.cim) - 1] = '\0';
 
     while (true)
@@ -348,17 +361,6 @@ Recept recept_interaktiv_beolvas()
     }
 
     return recept;
-}
-
-void slug(char *nev)
-{
-    char *c;
-    char *kurzor = nev;
-    while ((c = strchr(kurzor, ' ')) != NULL)
-    {
-        *c = '_';
-        kurzor = c + 1;
-    }
 }
 
 bool recept_mentes_fajlba(const Recept *recept)
@@ -413,7 +415,7 @@ void takaritas()
 
     free(receptek);
 }
-
+// boris specialt nem latja
 void keres()
 {
     char recept_nev[MAX_CIM_HOSSZ];
@@ -421,7 +423,9 @@ void keres()
     do
     {
         printf("Adja meg a recept nevet: \n");
-        scanf("%s", recept_nev);
+        fgets(recept_nev, MAX_CIM_HOSSZ, stdin);
+        // enter nem kell a vegere
+        recept_nev[strlen(recept_nev)-1] = '\0';
         getchar();
         for (int i = 0; i < receptek_szama; ++i)
         {
@@ -478,7 +482,7 @@ void de_ennek_egy_kis()
     printf("[0] <- Vissza\n");
     char bekert_hozzavalo_nev[MAX_HOZZAVALO_NEV_HOSSZ];
     int menu_bemenet;
-    int recept_indexek[100];
+    int recept_indexek[receptek_szama];
     int talalatok_szama = 0;
     printf("De ennek egy kis...\n");
     printf("Osszetevo: \n");
@@ -498,10 +502,12 @@ void de_ennek_egy_kis()
             }
         }
     }
+
     if (talalatok_szama == 0)
     {
         printf("Nincs talalat!\n");
     }
+
     do
     {
         scanf("%d", &menu_bemenet);
@@ -515,7 +521,7 @@ void de_ennek_egy_kis()
 // parameter: string tomb nullpointerrel a vegen, recept const struct pointer
 bool osszes_hozzavalot_tartalmazza(const char **keresett_hozzavalok, const Recept *recept)
 {
-    for (const char **keresett_hozzavalo = keresett_hozzavalok; keresett_hozzavalo != NULL; ++keresett_hozzavalo)
+    for (const char **keresett_hozzavalo = keresett_hozzavalok; *keresett_hozzavalo != NULL; ++keresett_hozzavalo)
     {
         bool tartalmazza = false;
 
@@ -539,10 +545,9 @@ bool osszes_hozzavalot_tartalmazza(const char **keresett_hozzavalok, const Recep
 
 void el_kell_hasznalni()
 {
-    char *keresett_hozzavalok[50];
+    char *keresett_hozzavalok[50] = {0};
     int keresett_hozzavalok_index = 0;
     char buffer[100];
-    const char elvalaszto[3] = ",";
     char *token;
     int recept_indexek[100];
     int talalatok_szama = 0;
@@ -552,16 +557,16 @@ void el_kell_hasznalni()
     fgets(buffer, 100, stdin);
     buffer[strlen(buffer) - 1] = '\0';
 
-    token = strtok(buffer, elvalaszto);
+    token = strtok(buffer, ",");
 
     while (token != NULL)
     {
-        token = strtok(NULL, elvalaszto);
         if (token[0] == ' ')
         {
             token = &token[1];
         }
         keresett_hozzavalok[keresett_hozzavalok_index++] = token;
+        token = strtok(NULL, ",");
     }
 
     for (int i = 0; i < receptek_szama; ++i)
@@ -569,7 +574,7 @@ void el_kell_hasznalni()
         if (osszes_hozzavalot_tartalmazza((const char **)&keresett_hozzavalok, &receptek[i]))
         {
             talalatok_szama++;
-            printf("[%d] %s\n", talalatok_szama, receptek[i].cim);
+
             recept_indexek[talalatok_szama - 1] = i;
         }
     }
@@ -577,9 +582,16 @@ void el_kell_hasznalni()
     if (talalatok_szama == 0)
     {
         printf("Nincs talalat!\n");
+        return;
     }
 
     printf("Valasszon egy receptet!\n");
+    printf("[0] Vissza a fomenube\n");
+
+    for (int i = 0; i < talalatok_szama; ++i)
+    {
+        printf("[%d] %s\n", i+1, receptek[recept_indexek[i]].cim);
+    }
     int menu_bemenet;
     do
     {
@@ -593,11 +605,14 @@ void el_kell_hasznalni()
     }
 }
 
-// Az osszes nezetbe kellene vissza gomb
+// A kereses, uj recept, el kell hasznalniba kellene vissza gomb
 int main()
 {
-    receptek = malloc(sizeof(Recept));
+    Recept *receptek;
+    int receptek_szama = 0;
 
+    receptek = malloc(sizeof(Recept));
+    // A receptek betöltése
     if (!osszes_recept_betolt())
     {
         perror("Hiba a receptek betoltese kozben");
