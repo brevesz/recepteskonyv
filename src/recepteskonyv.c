@@ -9,7 +9,7 @@
 Recepteskonyv recepteskonyv_new()
 {
     Recepteskonyv konyv;
-    konyv.receptek = malloc(1);
+    konyv.receptek = NULL; // majd ujrafoglaljuk
     konyv.receptek_szama = 0;
 
     return konyv;
@@ -29,7 +29,7 @@ void recept_torles(Recept *recept, Recepteskonyv *konyv)
 {
     // fajlbol torles
     recept_fajl_torles(recept->cim);
-    
+
     // a receptekbol torles
     int recept_index = recept - konyv->receptek;
     recept_free(konyv->receptek[recept_index]);
@@ -39,7 +39,6 @@ void recept_torles(Recept *recept, Recepteskonyv *konyv)
         konyv->receptek[i] = konyv->receptek[i + 1];
     }
     konyv->receptek_szama--;
-
 }
 
 void recept_kiir(Recept *recept, Recepteskonyv *konyv)
@@ -58,7 +57,6 @@ void recept_kiir(Recept *recept, Recepteskonyv *konyv)
     printf("%s\n", recept->leiras);
     printf("\n");
     printf("[0] Vissza a fomenube\t[d] Recept torlese\n");
-    // itt meg kell torles funkcio
     char menu_bemenet;
 
     // csak a '0' es a 'd' ertekre ugrik vissza a fomenube
@@ -104,7 +102,6 @@ Recept recept_interaktiv_beolvas()
     Recept recept = recept_new();
     recept.cim = malloc(sizeof(char) * MAX_CIM_HOSSZ);
     recept.hozzavalok = malloc(sizeof(Hozzavalo) * MAX_HOZZAVALOK);
-    recept.leiras = malloc(sizeof(char) * MAX_LEIRAS_HOSSZ);
 
     for (int i = 0; i < MAX_HOZZAVALOK; ++i)
     {
@@ -144,23 +141,27 @@ Recept recept_interaktiv_beolvas()
 
     printf("Recept leirasa:\n");
 
-    char *kurzor = recept.leiras;
-    while (true)
+    char puffer[50];
+    char *leiras = NULL;
+    int leiras_hossz = 0;
+    while (fgets(puffer, 50, stdin))
     {
-        fgets(kurzor, 80, stdin);
-        kurzor += strlen(kurzor);
+        leiras = realloc(leiras, (leiras_hossz + 50) * sizeof(char));
+        strncpy(leiras + leiras_hossz, puffer, 50);
+        leiras_hossz += strlen(puffer);
 
         // ket ures sorra kilepunk
-        if (*(kurzor - 1) == '\n' && *(kurzor - 2) == '\n')
+        if (leiras[leiras_hossz - 1] == '\n' && leiras[leiras_hossz - 2] == '\n')
         {
-            *(kurzor - 2) = '\0';
+            leiras[leiras_hossz - 1] = '\0';
             break;
         }
     }
 
+    recept.leiras = leiras;
+
     return recept;
 }
-
 
 void uj_recept(Recepteskonyv *konyv)
 {
@@ -182,7 +183,7 @@ void keres(Recepteskonyv *konyv)
         printf("Adja meg a recept nevet: \n");
         fgets(recept_nev, MAX_CIM_HOSSZ, stdin);
         // enter nem kell a vegere
-        recept_nev[strlen(recept_nev)-1] = '\0';
+        recept_nev[strlen(recept_nev) - 1] = '\0';
         for (int i = 0; i < konyv->receptek_szama; ++i)
         {
             if (strcmp(konyv->receptek[i].cim, recept_nev) == 0)
@@ -209,7 +210,8 @@ void nincs_otletem(Recepteskonyv *konyv)
     srand(time(0));
     while (!kilepes)
     {
-        Recept *sorsolt_recept = sorsol(konyv); // random struktura
+        // random struktura
+        Recept *sorsolt_recept = sorsol(konyv);
 
         printf("A sorsolt recept: %s\n", sorsolt_recept->cim);
         printf("[0] <- Megse\n");
@@ -269,9 +271,10 @@ void de_ennek_egy_kis(Recepteskonyv *konyv)
     printf("[0] Vissza a fomenube\n");
     for (int i = 0; i < talalatok_szama; ++i)
     {
-        printf("[%d] %s\n", i+1, konyv->receptek[talalatok[i]].cim);
+        printf("[%d] %s\n", i + 1, konyv->receptek[talalatok[i]].cim);
     }
 
+    // az adott intervallumban várja a bemenetet
     do
     {
         scanf("%d", &menu_bemenet);
@@ -333,10 +336,11 @@ void el_kell_hasznalni(Recepteskonyv *konyv)
 
     for (int i = 0; i < talalatok_szama; ++i)
     {
-        printf("[%d] %s\n", i+1, konyv->receptek[talalatok[i]].cim);
+        printf("[%d] %s\n", i + 1, konyv->receptek[talalatok[i]].cim);
     }
 
     int menu_bemenet;
+    // helyes intervallumba kell lennie a bemenetnek
     do
     {
         scanf("%d", &menu_bemenet);

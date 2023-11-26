@@ -8,6 +8,7 @@
 #include "debugmalloc.h"
 
 const char *RECEPTEK_MAPPA = "receptek";
+
 // spacet '_'-re csereli
 // nincs a headerbe, mert mashol nem hasznaljuk
 void slug(char *nev)
@@ -41,6 +42,7 @@ void recept_fajl_torles(char *cim)
     chdir("..");
 }
 
+// recept_beolvas_fajlbol seged fuggvenye
 bool hozzavalo_beolvas(FILE *f, Hozzavalo *hozzavalo)
 {
     char sor[101];
@@ -51,6 +53,7 @@ bool hozzavalo_beolvas(FILE *f, Hozzavalo *hozzavalo)
         return false;
     }
 
+    // lefoglalt teruletek merete a zarojelekkel meghatarozhato
     char *nev = sor + 2;
     char *mennyiseg = strrchr(sor, '(') + 1;
     int nev_hossz = (mennyiseg - nev) - 2;
@@ -101,6 +104,7 @@ bool recept_beolvas_fajlbol(const char *fajlnev, Recept *recept)
     {
         recept->hozzavalok_szama++;
 
+        // szurunk a makro tullepesere
         if (recept->hozzavalok_szama >= MAX_HOZZAVALOK)
         {
             perror("Tul sok hozzavalo");
@@ -109,14 +113,19 @@ bool recept_beolvas_fajlbol(const char *fajlnev, Recept *recept)
         }
     }
 
-    recept->leiras = malloc(MAX_LEIRAS_HOSSZ);
-    char *p = recept->leiras;
+    // fgets amig nincs vege a fajlnak
+    // minden sor, vagy ha egy sor hosszabb mint 50: 50-nel noveljuk a foglalast
+    char *leiras = NULL;
+    int leiras_hossz = 0;
     while (fgets(puffer, 50, f))
     {
-        strncpy(p, puffer, 50);
-        p += strlen(puffer);
+        leiras = realloc(leiras, (leiras_hossz + 50) * sizeof(char));
+        strncpy(leiras + leiras_hossz, puffer, 50);
+        leiras_hossz += strlen(puffer);
     }
-    *p = '\0';
+    leiras[leiras_hossz] = '\0';
+
+    recept->leiras = leiras;
 
     fclose(f);
     return true;
@@ -127,6 +136,7 @@ bool osszes_recept_betolt(Recepteskonyv *konyv)
     DIR *mappa;
     struct dirent *elem;
 
+    // eljut a receptek mappaba
     chdir(RECEPTEK_MAPPA);
     mappa = opendir(".");
 

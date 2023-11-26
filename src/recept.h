@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 #define MAX_CIM_HOSSZ 120
-#define MAX_LEIRAS_HOSSZ 5000
 #define MAX_HOZZAVALOK 50
 
 typedef struct

@@ -23,11 +23,11 @@ int main()
     int menu_bemenet;
     bool kilepes = false;
 
-    printf("%s", "\t\t\t\tReceptes konyv\n\n");
+    printf("%s", "\t\t\t===Receptes konyv===\n\n");
 
     while (!kilepes)
     {
-        printf("Fomenu\n");
+        printf("==Fomenu=========\n");
         printf("[1] Osszes recept\n");
         printf("[2] Uj recept\n");
         printf("[3] Kereses\n");

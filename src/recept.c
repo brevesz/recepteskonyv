@@ -34,6 +34,7 @@ bool recept_mindet_tartalmazza(const char **keresett_hozzavalok, const Recept *r
 {
     for (const char **k = keresett_hozzavalok; *k != NULL; ++k)
     {
+        // addig ismetli, amig mindegyik osszetevot megtalalta, kulonben kilep false-al
         bool tartalmazza = false;
 
         for (int j = 0; j < recept->hozzavalok_szama; ++j)
@@ -45,6 +46,7 @@ bool recept_mindet_tartalmazza(const char **keresett_hozzavalok, const Recept *r
             }
         }
 
+        // ha az egyik osszetevo nincs benne, akkor mar nem tartalmazza az osszeset
         if (!tartalmazza)
         {
             return false;

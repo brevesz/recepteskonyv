@@ -11,7 +11,6 @@ typedef struct
     int receptek_szama;
 } Recepteskonyv;
 
-
 Recepteskonyv recepteskonyv_new();
 void recepteskonyv_free(Recepteskonyv konyv);
 void recept_torles(Recept *recept, Recepteskonyv *konyv);
