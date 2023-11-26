@@ -286,31 +286,6 @@ void de_ennek_egy_kis(Recepteskonyv *konyv)
     }
 }
 
-// parameter: string tomb nullpointerrel a vegen, recept const struct pointer
-bool osszes_hozzavalot_tartalmazza(const char **keresett_hozzavalok, const Recept *recept)
-{
-    for (const char **keresett_hozzavalo = keresett_hozzavalok; *keresett_hozzavalo != NULL; ++keresett_hozzavalo)
-    {
-        bool tartalmazza = false;
-
-        for (int j = 0; j < recept->hozzavalok_szama; ++j)
-        {
-            if (strcmp(recept->hozzavalok[j].nev, *keresett_hozzavalo) == 0)
-            {
-                tartalmazza = true;
-                break;
-            }
-        }
-
-        if (!tartalmazza)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void el_kell_hasznalni(Recepteskonyv *konyv)
 {
     char *keresett_hozzavalok[50] = {0};
@@ -320,7 +295,7 @@ void el_kell_hasznalni(Recepteskonyv *konyv)
     int talalatok[100];
     int talalatok_szama = 0;
     // fgets, mivel itt meg lehet adni a meretet, es nem tud kiirni a bufferbol
-    printf("Adjon meg hozzavalokat, vesszovel elvalasztva! (Pl. alma, rizs)\n");
+    printf("Adjon meg hozzavalokat, vesszovel elvalasztva! (Pl. Hagyma, Fokhagyma)\n");
     printf("El kell hasznalni: \n");
     fgets(buffer, 100, stdin);
     buffer[strlen(buffer) - 1] = '\0';
@@ -340,7 +315,7 @@ void el_kell_hasznalni(Recepteskonyv *konyv)
     for (int i = 0; i < konyv->receptek_szama; ++i)
     {
         const Recept *recept = &konyv->receptek[i];
-        if (osszes_hozzavalot_tartalmazza((const char **)&keresett_hozzavalok, recept))
+        if (recept_mindet_tartalmazza((const char **)&keresett_hozzavalok, recept))
         {
             talalatok_szama++;
             talalatok[talalatok_szama - 1] = i;

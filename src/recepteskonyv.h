@@ -23,7 +23,6 @@ void keres(Recepteskonyv *konyv);
 Recept *sorsol(Recepteskonyv *konyv);
 void nincs_otletem(Recepteskonyv *konyv);
 void de_ennek_egy_kis(Recepteskonyv *konyv);
-bool osszes_hozzavalot_tartalmazza(const char **keresett_hozzavalok, const Recept *recept);
 void el_kell_hasznalni(Recepteskonyv *konyv);
 
 #endif

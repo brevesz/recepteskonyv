@@ -2,6 +2,7 @@
 #define RECEPT_H
 
 #include "hozzavalok.h"
+#include <stdbool.h>
 
 #define MAX_CIM_HOSSZ 120
 #define MAX_LEIRAS_HOSSZ 5000
@@ -16,7 +17,6 @@ typedef struct
 } Recept;
 
 Recept recept_new();
-
 void recept_free(Recept recept);
-
+bool recept_mindet_tartalmazza(const char **keresett_hozzavalok, const Recept *recept);
 #endif

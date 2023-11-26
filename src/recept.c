@@ -28,3 +28,28 @@ void recept_free(Recept recept)
     if (recept.leiras != NULL)
         free(recept.leiras);
 }
+
+// parameter: string tomb nullpointerrel a vegen, recept const struct pointer
+bool recept_mindet_tartalmazza(const char **keresett_hozzavalok, const Recept *recept)
+{
+    for (const char **k = keresett_hozzavalok; *k != NULL; ++k)
+    {
+        bool tartalmazza = false;
+
+        for (int j = 0; j < recept->hozzavalok_szama; ++j)
+        {
+            if (strcmp(recept->hozzavalok[j].nev, *k) == 0)
+            {
+                tartalmazza = true;
+                break;
+            }
+        }
+
+        if (!tartalmazza)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
